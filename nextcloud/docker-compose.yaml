@@ -1,18 +1,14 @@
 version: '3.7'
 services:
   database:
-    image: mariadb:10
+    image: mariadb:latest
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     restart: unless-stopped
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-      MYSQL_USER_FILE: '/run/secrets/mysql-user'
-      MYSQL_DATABASE_FILE: '/run/secrets/mysql-database'
-      MYSQL_PASSWORD_FILE: '/run/secrets/mysql-password'
-    secrets:
-      - mysql-user
-      - mysql-database
-      - mysql-password
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_USER: "nextcloud"
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     networks:
       - lan 
     volumes: 
@@ -21,20 +17,16 @@ services:
   nextcloud:
     depends_on:
       - database
-    image: nextcloud:18
+    image: nextcloud:latest
     restart: unless-stopped
     environment:
       MYSQL_HOST: 'database'
-      MYSQL_DATABASE_FILE: '/run/secrets/mysql-database'
-      MYSQL_USER_FILE: '/run/secrets/mysql-user'
-      MYSQL_PASSWORD_FILE: '/run/secrets/mysql-password'
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_USER: "nextcloud"
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
       NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_URL}
-    secrets:
-      - mysql-user
-      - mysql-database
-      - mysql-password
     networks:
       - lan
       - traefik_web
@@ -56,13 +48,3 @@ networks:
     external: true
 
   lan:
-
-secrets:
-  mysql-user:
-    file: ./secrets/mysql-user.txt
-
-  mysql-database:
-    file: ./secrets/mysql-database.txt
-
-  mysql-password:
-    file: ./secrets/mysql-password.txt
